@@ -7,7 +7,7 @@ DynDNS-like script for keeping your Plex IPv6 custom access URL up to date, auto
 - restart Plex service
 
 ## Setup
-In order to use the script, you just need to download it. However, if you want it to automatically restart the Plex service case the IPv6 address changed, you need to either comment out or add a command to restart the service (depending on your host OS).
+In order to use the script, you just need to download it. However, if you want it to automatically restart the Plex service in case the IPv6 address changed, you need to either comment out or add a command to restart the service (depending on your host OS).
 
 ## Command line arguments
 The script requires two positional arguments:
@@ -19,7 +19,7 @@ Position|Description|Required
 
 ## Usage
 
-A simple example: You are running Plex on an Ubuntu server and set Plex up to listen on the `ens18` interface. Your Plex library resides in the default location, which is `/var/lib/plexmediaserver/Library/Application Support/Plex Media Server`. Assuming you are currently in the directly we placed the script in, you would run the script like so:
+A simple example: You are running Plex on an Ubuntu server and set Plex up to listen on the `ens18` interface. Your Plex library resides in the default location, which is `/var/lib/plexmediaserver/Library/Application Support/Plex Media Server`. Assuming you are currently in the directory you placed the script in, you would run the script like so:
 
 ```bash
 ./update-plex-ipv6-access-url.sh ens18 "/var/lib/plexmediaserver/Library/Application Support/Plex Media Server/Preferences.xml"
