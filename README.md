@@ -17,6 +17,8 @@ Position|Description|Required
 1       |Name of network interface to use for IPv6 access|Yes
 2       |Path to Plex config (`Preferences.xml`)|Yes
 
+If you are unsure where to find your Plex data directory (which contains the `Preferences.xml`), please refer to [this Plex support article](https://support.plex.tv/articles/202915258-where-is-the-plex-media-server-data-directory-located/).
+
 ## Usage
 
 A simple example: You are running Plex on an Ubuntu server and set Plex up to listen on the `ens18` interface. Your Plex library resides in the default location, which is `/var/lib/plexmediaserver/Library/Application Support/Plex Media Server`. Assuming you are currently in the directory you placed the script in, you would run the script like so:
