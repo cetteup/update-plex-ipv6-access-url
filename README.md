@@ -9,6 +9,12 @@ DynDNS-like script for keeping your Plex IPv6 custom access URL up to date, auto
 ## Setup
 In order to use the script, you just need to download it. However, if you want it to automatically restart the Plex service in case the IPv6 address changed, you need to either comment out or add a command to restart the service (depending on your host OS).
 
+You have to add the `customConnections` attribute in your `Preferences.xml`:
+- Get your server ID from https://app.plex.tv/desktop/
+- Use the browser developer tools, open the network tab and search for the URL that contains `.direct`
+- The server ID is between the IPv4 (or IPv6) and `.plex.direct:32400/`
+- Add the attribute `customConnections="https://xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx.SERVERID.plex.direct:32400/"` to your `Preferences.xml`
+
 ## Command line arguments
 The script requires two positional arguments:
 
