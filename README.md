@@ -6,6 +6,30 @@ DynDNS-like script for keeping your Plex IPv6 custom access URL up to date, auto
 - update Plex config with plex.direct-domain using current IPv6 address
 - restart Plex service
 
+## Prerequisite
+You need to initially add a custom server access URL manually, which the script will then keep up to date. Here's how you can easily find everything you need:
+
+1. Navigate to any media item in your library as the admin user
+2. Click `...` (More) next to the edit pen to see more options
+3. Click "Get Info" at the very bottom of the list
+4. At the bottom right of the "Media info" dialogue, click "View XML"
+5. Take note of the domain in the new tab, you should something like `https://[some-ip-address].[server-id].plex.direct:32400/`
+6. Determine your server's current IPv6 address (either directly from the server or via your router)
+7. Expand the IPv6 address to it's uncompressed/full state (using a tool like [this one](https://dnschecker.org/ipv6-expand.php), which turns a shortened IPv6 such as `2606:4700::6810:84e5` into `2606:4700:0000:0000:0000:0000:6810:84e5`)
+8. Replace all colons in the expanded IPv6 address with dashes
+9. Put everything together as `https://["dashed"-ipv6-address].[serverid].plex.direct:32400/` the "dashed" IPv6
+10. Add the url as a "Custom server access URL" in your Plex server settings unter "Network"
+
+If you are unsure where to find the "Media info" dialogue in order to get your server id, follow [this Plex support article](https://support.plex.tv/articles/201998867-investigate-media-information-and-formats/).
+
+__Example__:
+
+IPv6 address reported by server: `2606:4700::6810:84e5`
+
+Expanded IPv6 address: `2606:4700:0000:0000:0000:0000:6810:84e5`
+
+Custom server access URL to add: `https://2606-4700-0000-0000-0000-0000-6810-84e5.055e11e51095c8b4f16c572691ff8113.plex.direct:32400/`
+
 ## Setup
 In order to use the script, you just need to download it. However, if you want it to automatically restart the Plex service in case the IPv6 address changed, you need to either comment out or add a command to restart the service (depending on your host OS).
 
