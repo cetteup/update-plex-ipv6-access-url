@@ -38,7 +38,7 @@ expand_ipv6() {
 }
 
 # Get IPv6 address of given interface (command adapted from: https://superuser.com/a/1057290)
-IPv6=`/sbin/ip -6 addr show dev "$1" scope global | grep inet6 | awk -F '[ \t]+|/' '{print $3}'`
+IPv6=`/sbin/ip -6 -o addr show dev "$1" scope global | grep inet6 | grep -v deprecated | grep -v temporary | awk -F '[ \t]+|/' '{print $4}'`
 if [ -n "$IPv6" ]; then
 	echo "Got IPv6 address: $IPv6"
 	# Format IPv6 for Plex (replace : with -)
