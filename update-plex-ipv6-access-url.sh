@@ -50,6 +50,7 @@ if [ -n "$IPv6" ]; then
 		# Restart Plex service, uncomment line for your server's os or add your own
 		# systemctl restart plexmediaserver # systemd Linux distributions (Ubuntu, Debian, ...)
 		# synoservice --restart pkgctl-Plex\ Media\ Server # Synology DiskStations (details: https://tech.setepontos.com/2018/03/25/control-synology-dsm-services-via-terminal-ssh/)
+		# synopkg start PlexMediaServer # Synology NAS DSM 7 with the official package
 	else
 		echo "Current IPv6 matches config, exiting"
 	fi
