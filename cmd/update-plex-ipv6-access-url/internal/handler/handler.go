@@ -17,6 +17,9 @@ func UpdateIPv6CustomAccessURL(addr netip.Addr, config plex.Config) error {
 	}
 
 	device, err := resources.GetDeviceByIdentifier(config.Preferences.GetProcessedMachineIdentifier())
+	if err != nil {
+		return err
+	}
 
 	plexDirectHostname, err := device.GetPlexDirectHostname()
 	if err != nil {
