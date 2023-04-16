@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
@@ -80,5 +81,7 @@ func getInput(prompt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(input, "\n"), nil
+	return strings.TrimRightFunc(input, func(r rune) bool {
+		return unicode.IsControl(r)
+	}), nil
 }
