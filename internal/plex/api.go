@@ -14,19 +14,31 @@ import (
 
 const (
 	BaseURL                   = "https://plex.tv/api"
+	identityEndpoint          = "/identity"
 	resourcesEndpoint         = "/resources"
 	preferencesEndpoint       = "/:/prefs"
 	headerKeyToken            = "X-Plex-Token"
 	queryKeyIncludeHttps      = "includeHttps"
 	queryKeyIncludeIPv6       = "includeIPv6"
 	queryKeyCustomConnections = "customConnections"
+
+	SettingIDCustomConnections       = "customConnections"
+	SettingIDManualPortMappingMode   = "ManualPortMappingMode"
+	SettingIDManualPortMappingPort   = "ManualPortMappingPort"
+	SettingIDLastAutomaticMappedPort = "LastAutomaticMappedPort"
+
+	settingTypeBool = "bool"
 )
 
-type GetResourcesDTO struct {
+type IdentityDTO struct {
+	MachineIdentifier string `xml:"machineIdentifier,attr"`
+}
+
+type ResourcesDTO struct {
 	Devices []DeviceDTO `xml:"Device"`
 }
 
-func (r GetResourcesDTO) GetDeviceByIdentifier(clientIdentifier string) (DeviceDTO, error) {
+func (r ResourcesDTO) GetDeviceByIdentifier(clientIdentifier string) (DeviceDTO, error) {
 	for _, d := range r.Devices {
 		if d.ClientIdentifier == clientIdentifier {
 			return d, nil
@@ -85,6 +97,30 @@ type ConnectionDTO struct {
 	Local    string `xml:"local,attr"`
 }
 
+type PreferencesDTO struct {
+	Settings []SettingDTO `xml:"Setting"`
+}
+
+func (p PreferencesDTO) GetSettingByID(id string) (SettingDTO, error) {
+	for _, s := range p.Settings {
+		if s.ID == id {
+			return s, nil
+		}
+	}
+
+	return SettingDTO{}, fmt.Errorf("no such setting: %s", id)
+}
+
+type SettingDTO struct {
+	ID    string `xml:"id,attr"`
+	Type  string `xml:"type,attr"`
+	Value string `xml:"value,attr"`
+}
+
+func (s SettingDTO) IsEnabledBoolSetting() bool {
+	return s.Type == settingTypeBool && s.Value == plexTrue
+}
+
 type ApiClient struct {
 	client  http.Client
 	baseURL string
@@ -101,10 +137,36 @@ func NewApiClient(baseURL string, token string) *ApiClient {
 	}
 }
 
-func (c *ApiClient) GetResources() (GetResourcesDTO, error) {
+func (c *ApiClient) GetIdentity() (IdentityDTO, error) {
 	u, err := url.Parse(c.baseURL)
 	if err != nil {
-		return GetResourcesDTO{}, err
+		return IdentityDTO{}, err
+	}
+
+	u = u.JoinPath(identityEndpoint)
+
+	req, err := c.createRequest(http.MethodGet, u.String())
+	if err != nil {
+		return IdentityDTO{}, err
+	}
+
+	bytes, err := c.do(req)
+	if err != nil {
+		return IdentityDTO{}, err
+	}
+
+	var identity IdentityDTO
+	if err := xml.Unmarshal(bytes, &identity); err != nil {
+		return IdentityDTO{}, err
+	}
+
+	return identity, nil
+}
+
+func (c *ApiClient) GetResources() (ResourcesDTO, error) {
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return ResourcesDTO{}, err
 	}
 
 	u = u.JoinPath(resourcesEndpoint)
@@ -116,20 +178,46 @@ func (c *ApiClient) GetResources() (GetResourcesDTO, error) {
 
 	req, err := c.createRequest(http.MethodGet, u.String())
 	if err != nil {
-		return GetResourcesDTO{}, err
+		return ResourcesDTO{}, err
 	}
 
 	bytes, err := c.do(req)
 	if err != nil {
-		return GetResourcesDTO{}, err
+		return ResourcesDTO{}, err
 	}
 
-	var resources GetResourcesDTO
+	var resources ResourcesDTO
 	if err := xml.Unmarshal(bytes, &resources); err != nil {
-		return GetResourcesDTO{}, err
+		return ResourcesDTO{}, err
 	}
 
 	return resources, nil
+}
+
+func (c *ApiClient) GetPreferences() (PreferencesDTO, error) {
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return PreferencesDTO{}, err
+	}
+
+	u = u.JoinPath(preferencesEndpoint)
+
+	req, err := c.createRequest(http.MethodGet, u.String())
+	if err != nil {
+		return PreferencesDTO{}, err
+	}
+
+	bytes, err := c.do(req)
+	if err != nil {
+		return PreferencesDTO{}, err
+	}
+
+	var preferences PreferencesDTO
+	if err := xml.Unmarshal(bytes, &preferences); err != nil {
+		return PreferencesDTO{}, err
+	}
+
+	return preferences, nil
 }
 
 func (c *ApiClient) UpdateCustomConnections(customConnections string) error {

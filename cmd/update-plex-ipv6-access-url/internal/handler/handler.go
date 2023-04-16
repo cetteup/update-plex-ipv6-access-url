@@ -9,45 +9,95 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
-func UpdateIPv6CustomAccessURL(addr netip.Addr, config plex.Config) error {
-	client := plex.NewApiClient(plex.BaseURL, config.Preferences.GetToken())
-	resources, err := client.GetResources()
+func UpdateIPv6CustomAccessURL(serverAddr string, token string, interfaceAddr netip.Addr) error {
+	client := plex.NewApiClient(serverAddr, token)
+	identity, err := client.GetIdentity()
 	if err != nil {
 		return err
 	}
 
-	device, err := resources.GetDeviceByIdentifier(config.Preferences.GetProcessedMachineIdentifier())
+	plexDirectHostname, err := getPlexDirectHostname(token, identity.MachineIdentifier)
 	if err != nil {
 		return err
 	}
 
-	plexDirectHostname, err := device.GetPlexDirectHostname()
+	preferences, err := client.GetPreferences()
 	if err != nil {
 		return err
 	}
 
-	localConnection, err := device.GetLocalConnection()
+	currentAccessURLs, err := getCustomConnections(preferences)
+	if err != nil {
+		return err
+	}
+
+	mappedPort, err := getMappedPort(preferences)
 	if err != nil {
 		return err
 	}
 
 	// Drop any existing IPv6 custom access urls (and empty ones) before adding a new one
-	customAccessURLs := make([]string, 0)
-	for _, c := range config.Preferences.GetCustomConnections() {
+	targetAccessURLs := make([]string, 0)
+	for _, c := range currentAccessURLs {
 		drop, err := isIPv6CustomAccessURL(c)
 		if err != nil {
 			return err
 		}
 
 		if !drop && c != "" {
-			customAccessURLs = append(customAccessURLs, c)
+			targetAccessURLs = append(targetAccessURLs, c)
 		}
 	}
 
-	customAccessURLs = append(customAccessURLs, buildIPv6CustomAccessURL(addr, plexDirectHostname, config.Preferences.GetMappedPort()))
+	targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(interfaceAddr, plexDirectHostname, mappedPort))
 
-	localClient := plex.NewApiClient(localConnection.URI, config.Preferences.GetToken())
-	return localClient.UpdateCustomConnections(strings.Join(customAccessURLs, ","))
+	return client.UpdateCustomConnections(strings.Join(targetAccessURLs, ","))
+}
+
+func getPlexDirectHostname(token string, identifier string) (string, error) {
+	client := plex.NewApiClient(plex.BaseURL, token)
+	resources, err := client.GetResources()
+	if err != nil {
+		return "", err
+	}
+
+	device, err := resources.GetDeviceByIdentifier(identifier)
+	if err != nil {
+		return "", err
+	}
+
+	return device.GetPlexDirectHostname()
+}
+
+func getCustomConnections(preferences plex.PreferencesDTO) ([]string, error) {
+	setting, err := preferences.GetSettingByID(plex.SettingIDCustomConnections)
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(setting.Value, ","), nil
+}
+
+func getMappedPort(preferences plex.PreferencesDTO) (string, error) {
+	manualPortMappingMode, err := preferences.GetSettingByID(plex.SettingIDManualPortMappingMode)
+	if err != nil {
+		return "", err
+	}
+
+	var portSetting plex.SettingDTO
+	if manualPortMappingMode.IsEnabledBoolSetting() {
+		portSetting, err = preferences.GetSettingByID(plex.SettingIDManualPortMappingPort)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		portSetting, err = preferences.GetSettingByID(plex.SettingIDLastAutomaticMappedPort)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return portSetting.Value, nil
 }
 
 func buildIPv6CustomAccessURL(addr netip.Addr, plexDirectHostname, port string) string {

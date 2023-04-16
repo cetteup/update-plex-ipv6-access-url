@@ -10,12 +10,10 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/cmd/update-plex-ipv6-access-url/internal/config"
 	"github.com/cetteup/update-plex-ipv6-access-url/cmd/update-plex-ipv6-access-url/internal/handler"
 	"github.com/cetteup/update-plex-ipv6-access-url/internal"
-	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
 const (
 	logKeyInterfaceName = "interfaceName"
-	logKeyConfigPath    = "configPath"
 )
 
 var (
@@ -46,15 +44,11 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	// TODO Validate cfg instead
-	if cfg.InterfaceName == "" {
-		log.Fatal().Msg("No interface name specified")
-	}
-	if cfg.ConfigPath == "" {
-		log.Fatal().Msg("No config path specified")
+	if err := cfg.ReadValuesIfMissing(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to read missing config values")
 	}
 
-	a, err := internal.GetInterfaceGlobalUnicastIPv6ByName(cfg.InterfaceName)
+	interfaceAddr, err := internal.GetInterfaceGlobalUnicastIPv6ByName(cfg.InterfaceName)
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -64,18 +58,10 @@ func main() {
 
 	log.Info().
 		Str(logKeyInterfaceName, cfg.InterfaceName).
-		Str("address", a.String()).
+		Str("address", interfaceAddr.String()).
 		Msg("Found IPv6 address on interface")
 
-	c, err := plex.ReadConfigFile(cfg.ConfigPath)
-	if err != nil {
-		log.Fatal().
-			Err(err).
-			Str(logKeyConfigPath, cfg.ConfigPath).
-			Msg("Failed to read Plex config file")
-	}
-
-	err = handler.UpdateIPv6CustomAccessURL(a, c)
+	err = handler.UpdateIPv6CustomAccessURL(cfg.ServerAddr, cfg.Token, interfaceAddr)
 	if err != nil {
 		log.Fatal().
 			Err(err).

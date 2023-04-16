@@ -9,6 +9,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestApiClient_GetIdentity(t *testing.T) {
+	token := "some-token"
+
+	tests := []struct {
+		name              string
+		givenStatusCode   int
+		givenData         []byte
+		wantIdentity      IdentityDTO
+		wantErrorContains string
+	}{
+		{
+			name:            "successfully fetches identity",
+			givenStatusCode: 200,
+			givenData: []byte(`
+				<?xml version="1.0" encoding="UTF-8"?>\n
+				<MediaContainer size="0" claimed="1" machineIdentifier="1142ed040a27acc36ea876e8362b28464c3d240d" version="1.31.1.6733-bc0674160"></MediaContainer>
+			`),
+			wantIdentity: IdentityDTO{
+				MachineIdentifier: "1142ed040a27acc36ea876e8362b28464c3d240d",
+			},
+		},
+		{
+			name:              "returns error for non-200 response code",
+			givenStatusCode:   401,
+			wantErrorContains: "failed with status code 401 (401 Unauthorized)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// GIVEN
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, token, r.Header.Get(headerKeyToken))
+				assert.Equal(t, identityEndpoint, r.URL.Path)
+
+				w.WriteHeader(tt.givenStatusCode)
+				_, err := w.Write(tt.givenData)
+				require.NoError(t, err)
+			}))
+
+			client := NewApiClient(server.URL, token)
+
+			// WHEN
+			resources, err := client.GetIdentity()
+
+			// THEN
+			if tt.wantErrorContains != "" {
+				assert.ErrorContains(t, err, tt.wantErrorContains)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantIdentity, resources)
+			}
+		})
+	}
+}
+
 func TestApiClient_GetResources(t *testing.T) {
 	token := "some-token"
 
@@ -16,7 +72,7 @@ func TestApiClient_GetResources(t *testing.T) {
 		name              string
 		givenStatusCode   int
 		givenData         []byte
-		wantResources     GetResourcesDTO
+		wantResources     ResourcesDTO
 		wantErrorContains string
 	}{
 		{
@@ -35,7 +91,7 @@ func TestApiClient_GetResources(t *testing.T) {
 					</Device>\n
 				</MediaContainer>
 			`),
-			wantResources: GetResourcesDTO{
+			wantResources: ResourcesDTO{
 				Devices: []DeviceDTO{
 					{
 						Name:             "MyPlexServer",
@@ -83,22 +139,22 @@ func TestApiClient_GetResources(t *testing.T) {
 			givenStatusCode: 200,
 			givenData: []byte(`
 				<?xml version="1.0" encoding="UTF-8"?>\n
-				<MediaContainer size="2">\n
+				<MediaContainer size="0">\n
 				</MediaContainer>
 			`),
-			wantResources: GetResourcesDTO{},
+			wantResources: ResourcesDTO{},
 		},
 		{
 			name:            "handles Device without connections",
 			givenStatusCode: 200,
 			givenData: []byte(`
 				<?xml version="1.0" encoding="UTF-8"?>\n
-				<MediaContainer size="2">\n
+				<MediaContainer size="1">\n
 					<Device name="MyPlexServer" product="Plex Media Server" productVersion="some-version" platform="some-platform" platformVersion="some-platform-version" device="some-device" clientIdentifier="1142ed040a27acc36ea876e8362b28464c3d240d" createdAt="1540597578" lastSeenAt="1681654399" provides="server" owned="1" accessToken="some-token" publicAddress="some-public-ip" httpsRequired="0" synced="0" relay="1" dnsRebindingProtection="0" natLoopbackSupported="0" publicAddressMatches="1" presence="1">\n
 					</Device>\n
 				</MediaContainer>
 			`),
-			wantResources: GetResourcesDTO{
+			wantResources: ResourcesDTO{
 				Devices: []DeviceDTO{
 					{
 						Name:             "MyPlexServer",
@@ -140,6 +196,92 @@ func TestApiClient_GetResources(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.wantResources, resources)
+			}
+		})
+	}
+}
+
+func TestApiClient_GetPreferences(t *testing.T) {
+	token := "some-token"
+
+	tests := []struct {
+		name              string
+		givenStatusCode   int
+		givenData         []byte
+		wantPreferences   PreferencesDTO
+		wantErrorContains string
+	}{
+		{
+			name:            "successfully fetches preferences",
+			givenStatusCode: 200,
+			givenData: []byte(`
+				<?xml version="1.0" encoding="UTF-8"?>\n
+				<MediaContainer size="3">\n
+					<Setting id="FriendlyName" label="Friendly name" summary="This name will be used to identify this media server to other computers on your network. If you leave it blank, your computer&#39;s name will be used instead." type="text" default="" value="MyPlexServer" hidden="0" advanced="0" group="general" />\n
+					<Setting id="sendCrashReports" label="Send crash reports to Plex" summary="This helps us improve your experience." type="bool" default="1" value="0" hidden="0" advanced="0" group="general" />\n
+					<Setting id="customConnections" label="Custom server access URLs" summary="A comma-separated list of URLs (http or https) which are published up to plex.tv for server discovery." type="text" default="" value="" hidden="0" advanced="1" group="network" />\n
+				</MediaContainer>
+			`),
+			wantPreferences: PreferencesDTO{
+				Settings: []SettingDTO{
+					{
+						ID:    "FriendlyName",
+						Type:  "text",
+						Value: "MyPlexServer",
+					},
+					{
+						ID:    "sendCrashReports",
+						Type:  "bool",
+						Value: "0",
+					},
+					{
+						ID:    "customConnections",
+						Type:  "text",
+						Value: "",
+					},
+				},
+			},
+		},
+		{
+			name:            "handles MediaContainer without settings",
+			givenStatusCode: 200,
+			givenData: []byte(`
+				<?xml version="1.0" encoding="UTF-8"?>\n
+				<MediaContainer size="0">\n
+				</MediaContainer>
+			`),
+			wantPreferences: PreferencesDTO{},
+		},
+		{
+			name:              "returns error for non-200 response code",
+			givenStatusCode:   401,
+			wantErrorContains: "failed with status code 401 (401 Unauthorized)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// GIVEN
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, token, r.Header.Get(headerKeyToken))
+				assert.Equal(t, preferencesEndpoint, r.URL.Path)
+
+				w.WriteHeader(tt.givenStatusCode)
+				_, err := w.Write(tt.givenData)
+				require.NoError(t, err)
+			}))
+
+			client := NewApiClient(server.URL, token)
+
+			// WHEN
+			resources, err := client.GetPreferences()
+
+			// THEN
+			if tt.wantErrorContains != "" {
+				assert.ErrorContains(t, err, tt.wantErrorContains)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantPreferences, resources)
 			}
 		})
 	}
