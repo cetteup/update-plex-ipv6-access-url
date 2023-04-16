@@ -1,0 +1,48 @@
+name: release
+
+on:
+  release:
+    types: [ created ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.meta.outputs.date }}
+    steps:
+      - name: Prepare release meta
+        id: meta
+        run: |
+          echo "::set-output name=date::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+  release:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    needs:
+      - meta
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        goos: [ windows, linux, darwin ]
+        goarch: [ "386", amd64, arm64 ]
+        exclude:
+          - goos: darwin
+            goarch: "386"
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: wangyoucao577/go-release-action@v1.37
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: 1.19.5
+          project_path: cmd/update-plex-ipv6-access-url
+          ldflags: "-X 'main.buildTime=${{ needs.meta.outputs.date }}' -X 'main.buildCommit=${{ github.sha }}' -X 'main.buildVersion=${{ github.ref_name }}'"
+          sha256sum: true
