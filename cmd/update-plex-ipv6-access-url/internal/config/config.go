@@ -75,7 +75,7 @@ func (c *Config) ReadValuesIfMissing() error {
 
 func getInput(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print(fmt.Sprintf("%s: ", prompt))
+	fmt.Printf("%s: ", prompt)
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		return "", err
