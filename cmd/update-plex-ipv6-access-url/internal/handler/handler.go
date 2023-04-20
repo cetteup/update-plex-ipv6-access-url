@@ -9,19 +9,37 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
-func UpdateIPv6CustomAccessURL(serverAddr string, token string, interfaceAddr netip.Addr) error {
-	client := plex.NewApiClient(serverAddr, token)
-	identity, err := client.GetIdentity()
+type ApiClient interface {
+	GetIdentity() (plex.IdentityDTO, error)
+	GetResources() (plex.ResourcesDTO, error)
+	GetPreferences() (plex.PreferencesDTO, error)
+	UpdateCustomConnections(customConnections string) error
+}
+
+type Handler struct {
+	localClient  ApiClient
+	remoteClient ApiClient
+}
+
+func NewHandler(localClient, remoteClient ApiClient) *Handler {
+	return &Handler{
+		localClient:  localClient,
+		remoteClient: remoteClient,
+	}
+}
+
+func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr) error {
+	identity, err := h.localClient.GetIdentity()
 	if err != nil {
 		return err
 	}
 
-	plexDirectHostname, err := getPlexDirectHostname(token, identity.MachineIdentifier)
+	plexDirectHostname, err := h.getPlexDirectHostname(identity.MachineIdentifier)
 	if err != nil {
 		return err
 	}
 
-	preferences, err := client.GetPreferences()
+	preferences, err := h.localClient.GetPreferences()
 	if err != nil {
 		return err
 	}
@@ -51,12 +69,11 @@ func UpdateIPv6CustomAccessURL(serverAddr string, token string, interfaceAddr ne
 
 	targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(interfaceAddr, plexDirectHostname, mappedPort))
 
-	return client.UpdateCustomConnections(strings.Join(targetAccessURLs, ","))
+	return h.localClient.UpdateCustomConnections(strings.Join(targetAccessURLs, ","))
 }
 
-func getPlexDirectHostname(token string, identifier string) (string, error) {
-	client := plex.NewApiClient(plex.BaseURL, token)
-	resources, err := client.GetResources()
+func (h *Handler) getPlexDirectHostname(identifier string) (string, error) {
+	resources, err := h.remoteClient.GetResources()
 	if err != nil {
 		return "", err
 	}

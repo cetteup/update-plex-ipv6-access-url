@@ -10,6 +10,7 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/cmd/update-plex-ipv6-access-url/internal/config"
 	"github.com/cetteup/update-plex-ipv6-access-url/cmd/update-plex-ipv6-access-url/internal/handler"
 	"github.com/cetteup/update-plex-ipv6-access-url/internal"
+	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
 const (
@@ -61,7 +62,11 @@ func main() {
 		Str("address", interfaceAddr.String()).
 		Msg("Found IPv6 address on interface")
 
-	err = handler.UpdateIPv6CustomAccessURL(cfg.ServerAddr, cfg.Token, interfaceAddr)
+	localClient := plex.NewApiClient(cfg.ServerAddr, cfg.Token)
+	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token)
+	h := handler.NewHandler(localClient, remoteClient)
+
+	err = h.UpdateIPv6CustomAccessURL(interfaceAddr)
 	if err != nil {
 		log.Fatal().
 			Err(err).
