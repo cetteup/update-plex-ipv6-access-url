@@ -9,6 +9,13 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
+type IPv6URLCapitalization string
+
+const (
+	IPv6URLCapitalizationLower IPv6URLCapitalization = "lower"
+	IPv6URLCapitalizationUpper IPv6URLCapitalization = "upper"
+)
+
 type ApiClient interface {
 	GetIdentity() (plex.IdentityDTO, error)
 	GetResources() (plex.ResourcesDTO, error)
@@ -28,7 +35,7 @@ func NewHandler(localClient, remoteClient ApiClient) *Handler {
 	}
 }
 
-func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr) error {
+func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr, capitalization IPv6URLCapitalization) error {
 	identity, err := h.localClient.GetIdentity()
 	if err != nil {
 		return err
@@ -67,7 +74,7 @@ func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr) error {
 		}
 	}
 
-	targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(interfaceAddr, plexDirectHostname, mappedPort))
+	targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(interfaceAddr, plexDirectHostname, mappedPort, capitalization))
 
 	return h.localClient.UpdateCustomConnections(strings.Join(targetAccessURLs, ","))
 }
@@ -117,10 +124,16 @@ func getMappedPort(preferences plex.PreferencesDTO) (string, error) {
 	return portSetting.Value, nil
 }
 
-func buildIPv6CustomAccessURL(addr netip.Addr, plexDirectHostname, port string) string {
+func buildIPv6CustomAccessURL(addr netip.Addr, plexDirectHostname, port string, capitalization IPv6URLCapitalization) string {
 	dashedIPv6 := strings.ReplaceAll(addr.StringExpanded(), ":", "-")
-	hostname := strings.Join([]string{dashedIPv6, plexDirectHostname}, ".")
+	switch capitalization {
+	case IPv6URLCapitalizationLower:
+		dashedIPv6 = strings.ToLower(dashedIPv6)
+	case IPv6URLCapitalizationUpper:
+		dashedIPv6 = strings.ToUpper(dashedIPv6)
+	}
 
+	hostname := strings.Join([]string{dashedIPv6, plexDirectHostname}, ".")
 	u := url.URL{
 		Host:   net.JoinHostPort(hostname, port),
 		Scheme: "https",

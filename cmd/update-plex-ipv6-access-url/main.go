@@ -66,7 +66,7 @@ func main() {
 	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token, cfg.Timeout)
 	h := handler.NewHandler(localClient, remoteClient)
 
-	err = h.UpdateIPv6CustomAccessURL(interfaceAddr)
+	err = h.UpdateIPv6CustomAccessURL(interfaceAddr, handler.IPv6URLCapitalization(cfg.Capitalization))
 	if err != nil {
 		log.Fatal().
 			Err(err).

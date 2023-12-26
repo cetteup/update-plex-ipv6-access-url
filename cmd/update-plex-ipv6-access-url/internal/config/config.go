@@ -17,11 +17,12 @@ type Config struct {
 	Debug        bool
 	ColorizeLogs bool
 
-	ServerAddr    string
-	InterfaceName string
-	ConfigPath    string
-	Token         string
-	Timeout       int
+	ServerAddr     string
+	InterfaceName  string
+	ConfigPath     string
+	Token          string
+	Capitalization string
+	Timeout        int
 }
 
 func Init() *Config {
@@ -34,6 +35,7 @@ func Init() *Config {
 	flag.StringVar(&cfg.InterfaceName, "interface", "", "Name of network interface to use for IPv6 access")
 	flag.StringVar(&cfg.ConfigPath, "config", "", "Path to Plex config (Preferences.xml)")
 	flag.StringVar(&cfg.Token, "token", "", "Plex access token (X-Plex-Token) [required if 'config' flag is/cannot be provided]")
+	flag.StringVar(&cfg.Capitalization, "capitalization", "", "Capitalization to use for dashed IPv6 address in Plex custom access URL (upper|lower)")
 	flag.IntVar(&cfg.Timeout, "timeout", 5, "Plex API request timeout (in seconds)")
 	flag.Parse()
 	return cfg
