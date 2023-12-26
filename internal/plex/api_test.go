@@ -11,6 +11,7 @@ import (
 
 func TestApiClient_GetIdentity(t *testing.T) {
 	token := "some-token"
+	timeout := 5
 
 	tests := []struct {
 		name              string
@@ -49,7 +50,7 @@ func TestApiClient_GetIdentity(t *testing.T) {
 				require.NoError(t, err)
 			}))
 
-			client := NewApiClient(server.URL, token)
+			client := NewApiClient(server.URL, token, timeout)
 
 			// WHEN
 			resources, err := client.GetIdentity()
@@ -67,6 +68,7 @@ func TestApiClient_GetIdentity(t *testing.T) {
 
 func TestApiClient_GetResources(t *testing.T) {
 	token := "some-token"
+	timeout := 5
 
 	tests := []struct {
 		name              string
@@ -185,7 +187,7 @@ func TestApiClient_GetResources(t *testing.T) {
 				require.NoError(t, err)
 			}))
 
-			client := NewApiClient(server.URL, token)
+			client := NewApiClient(server.URL, token, timeout)
 
 			// WHEN
 			resources, err := client.GetResources()
@@ -203,6 +205,7 @@ func TestApiClient_GetResources(t *testing.T) {
 
 func TestApiClient_GetPreferences(t *testing.T) {
 	token := "some-token"
+	timeout := 5
 
 	tests := []struct {
 		name              string
@@ -271,7 +274,7 @@ func TestApiClient_GetPreferences(t *testing.T) {
 				require.NoError(t, err)
 			}))
 
-			client := NewApiClient(server.URL, token)
+			client := NewApiClient(server.URL, token, timeout)
 
 			// WHEN
 			resources, err := client.GetPreferences()
@@ -289,6 +292,7 @@ func TestApiClient_GetPreferences(t *testing.T) {
 
 func TestApiClient_UpdateCustomConnections(t *testing.T) {
 	token := "some-token"
+	timeout := 5
 	customConnections := "http://unused:32400/"
 
 	tests := []struct {
@@ -318,7 +322,7 @@ func TestApiClient_UpdateCustomConnections(t *testing.T) {
 				w.WriteHeader(tt.givenStatusCode)
 			}))
 
-			client := NewApiClient(server.URL, token)
+			client := NewApiClient(server.URL, token, timeout)
 
 			// WHEN
 			err := client.UpdateCustomConnections(customConnections)

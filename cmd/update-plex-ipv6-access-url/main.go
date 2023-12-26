@@ -62,8 +62,8 @@ func main() {
 		Str("address", interfaceAddr.String()).
 		Msg("Found IPv6 address on interface")
 
-	localClient := plex.NewApiClient(cfg.ServerAddr, cfg.Token)
-	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token)
+	localClient := plex.NewApiClient(cfg.ServerAddr, cfg.Token, cfg.Timeout)
+	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token, cfg.Timeout)
 	h := handler.NewHandler(localClient, remoteClient)
 
 	err = h.UpdateIPv6CustomAccessURL(interfaceAddr)

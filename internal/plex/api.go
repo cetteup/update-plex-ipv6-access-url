@@ -127,10 +127,10 @@ type ApiClient struct {
 	token   string
 }
 
-func NewApiClient(baseURL string, token string) *ApiClient {
+func NewApiClient(baseURL string, token string, timeout int) *ApiClient {
 	return &ApiClient{
 		client: http.Client{
-			Timeout: time.Second * 5,
+			Timeout: time.Second * time.Duration(timeout),
 		},
 		baseURL: baseURL,
 		token:   token,
