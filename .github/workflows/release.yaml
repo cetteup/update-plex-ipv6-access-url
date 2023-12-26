@@ -44,5 +44,5 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: go.mod
           project_path: cmd/update-plex-ipv6-access-url
-          ldflags: "-s -w -X 'main.buildTime=${{ needs.meta.outputs.date }}' -X 'main.buildCommit=${{ github.sha }}' -X 'main.buildVersion=${{ github.ref_name }}'"
+          ldflags: "-s -w -X 'main.buildTime=${{ steps.meta.outputs.date }}' -X 'main.buildCommit=${{ github.sha }}' -X 'main.buildVersion=${{ github.ref_name }}'"
           sha256sum: true
