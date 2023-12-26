@@ -3,7 +3,7 @@ module github.com/cetteup/update-plex-ipv6-access-url
 go 1.21.5
 
 require (
-	github.com/go-playground/validator/v10 v10.15.5
+	github.com/go-playground/validator/v10 v10.16.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 )
