@@ -11,12 +11,14 @@ DynDNS-like tool for keeping your Plex IPv6 custom access URL up to date, automa
 
 If any required command line argument is omitted, the tool will prompt you to provide input at runtime.
 
-| Name      | Description                                                                                                                                            | Required               |
-|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|
-| address   | Plex server's address in format http\[s\]://host:port                                                                                                  | Yes                    |
-| interface | Name of network interface to use for IPv6 access                                                                                                       | Yes                    |
-| token     | Plex access token (X-Plex-Token) [How to find](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)               | If config is not given |
- | config    | Path to Plex config (Preferences.xml) [How to find](https://support.plex.tv/articles/202915258-where-is-the-plex-media-server-data-directory-located/) | No                     |
+| Name           | Description                                                                                                                                            | Required               | Options              | Default |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|----------------------|---------|
+| address        | Plex server's address in format http\[s\]://host:port                                                                                                  | Yes                    |
+| interface      | Name of network interface to use for IPv6 access                                                                                                       | Yes                    |
+| token          | Plex access token (X-Plex-Token) [How to find](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)               | If config is not given |                      |         |
+ | config         | Path to Plex config (Preferences.xml) [How to find](https://support.plex.tv/articles/202915258-where-is-the-plex-media-server-data-directory-located/) | No                     |                      |         |
+| use            | Which IPv6 address(es) to use if multiple are found on the interface                                                                                   | No                     | `first` `last` `all` | `first` |
+| capitalization | Capitalization to use for dashed IPv6 address in Plex custom access URL                                                                                | No                     | `upper` `lower`      | `lower` |
 
 ## Usage
 
