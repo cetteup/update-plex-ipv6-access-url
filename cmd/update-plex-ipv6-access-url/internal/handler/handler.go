@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net"
 	"net/netip"
 	"net/url"
@@ -35,7 +36,20 @@ func NewHandler(localClient, remoteClient ApiClient) *Handler {
 	}
 }
 
-func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr, capitalization IPv6URLCapitalization) error {
+func (h *Handler) SelectAddrs(interfaceAddrs []netip.Addr, preference AddrPreference) ([]netip.Addr, error) {
+	switch preference {
+	case AddrPreferenceFirst:
+		return interfaceAddrs[:1], nil
+	case AddrPreferenceLast:
+		return interfaceAddrs[len(interfaceAddrs)-1:], nil
+	case AddrPreferenceAll:
+		return interfaceAddrs, nil
+	default:
+		return nil, fmt.Errorf("unkown address preference: %s", preference)
+	}
+}
+
+func (h *Handler) UpdateIPv6CustomAccessURLs(addrs []netip.Addr, capitalization IPv6URLCapitalization) error {
 	identity, err := h.localClient.GetIdentity()
 	if err != nil {
 		return err
@@ -62,7 +76,7 @@ func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr, capitaliza
 	}
 
 	// Drop any existing IPv6 custom access urls (and empty ones) before adding a new one
-	targetAccessURLs := make([]string, 0)
+	targetAccessURLs := make([]string, 0, len(currentAccessURLs)+len(addrs))
 	for _, c := range currentAccessURLs {
 		drop, err := isIPv6CustomAccessURL(c)
 		if err != nil {
@@ -74,7 +88,9 @@ func (h *Handler) UpdateIPv6CustomAccessURL(interfaceAddr netip.Addr, capitaliza
 		}
 	}
 
-	targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(interfaceAddr, plexDirectHostname, mappedPort, capitalization))
+	for _, addr := range addrs {
+		targetAccessURLs = append(targetAccessURLs, buildIPv6CustomAccessURL(addr, plexDirectHostname, mappedPort, capitalization))
+	}
 
 	return h.localClient.UpdateCustomConnections(strings.Join(targetAccessURLs, ","))
 }

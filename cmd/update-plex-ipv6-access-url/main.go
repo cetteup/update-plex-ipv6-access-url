@@ -49,29 +49,49 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to read missing config values")
 	}
 
-	interfaceAddr, err := internal.GetInterfaceGlobalUnicastIPv6ByName(cfg.InterfaceName)
+	interfaceAddrs, err := internal.GetGlobalUnicastIPv6AddrsByInterfaceName(cfg.InterfaceName)
 	if err != nil {
 		log.Fatal().
 			Err(err).
 			Str(logKeyInterfaceName, cfg.InterfaceName).
-			Msg("Failed to find global unicast IPv6 address")
+			Msg("Failed to find global unicast IPv6 addresses on interface")
+	}
+
+	if len(interfaceAddrs) == 0 {
+		log.Fatal().
+			Str(logKeyInterfaceName, cfg.InterfaceName).
+			Msg("No global unicast IPv6 address found on interface")
 	}
 
 	log.Info().
 		Str(logKeyInterfaceName, cfg.InterfaceName).
-		Str("address", interfaceAddr.String()).
-		Msg("Found IPv6 address on interface")
+		Interface("addresses", interfaceAddrs).
+		Msg("Found IPv6 addresses on interface")
 
 	localClient := plex.NewApiClient(cfg.ServerAddr, cfg.Token, cfg.Timeout)
 	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token, cfg.Timeout)
 	h := handler.NewHandler(localClient, remoteClient)
 
-	err = h.UpdateIPv6CustomAccessURL(interfaceAddr, handler.IPv6URLCapitalization(cfg.Capitalization))
+	selectedAddrs, err := h.SelectAddrs(interfaceAddrs, handler.AddrPreference(cfg.AddrPreference))
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Msg("Failed to update custom access url")
+			Msg("Failed to select IPv6 addresses to use")
 	}
 
-	log.Info().Msg("Successfully updated IPv6 custom server access URL")
+	if len(interfaceAddrs) > 1 {
+		log.Info().
+			Stringer("use", cfg.AddrPreference).
+			Interface("addresses", selectedAddrs).
+			Msg("Selected IPv6 addresses")
+	}
+
+	err = h.UpdateIPv6CustomAccessURLs(selectedAddrs, handler.IPv6URLCapitalization(cfg.Capitalization))
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("Failed to update custom access urls")
+	}
+
+	log.Info().Msg("Successfully updated IPv6 custom server access URLs")
 }

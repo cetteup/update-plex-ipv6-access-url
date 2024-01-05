@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/cetteup/update-plex-ipv6-access-url/cmd/update-plex-ipv6-access-url/internal/handler"
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
@@ -19,6 +20,7 @@ type Config struct {
 
 	ServerAddr     string
 	InterfaceName  string
+	AddrPreference handler.AddrPreference
 	ConfigPath     string
 	Token          string
 	Capitalization string
@@ -33,6 +35,7 @@ func Init() *Config {
 	flag.BoolVar(&cfg.ColorizeLogs, "colorize-logs", false, "colorize log messages")
 	flag.StringVar(&cfg.ServerAddr, "address", "", "Plex server's address in format http[s]://host:port")
 	flag.StringVar(&cfg.InterfaceName, "interface", "", "Name of network interface to use for IPv6 access")
+	flag.TextVar(&cfg.AddrPreference, "use", handler.AddrPreferenceFirst, "Which IPv6 address(es) to use if multiple are found on the interface (first|last|all)")
 	flag.StringVar(&cfg.ConfigPath, "config", "", "Path to Plex config (Preferences.xml)")
 	flag.StringVar(&cfg.Token, "token", "", "Plex access token (X-Plex-Token) [required if 'config' flag is/cannot be provided]")
 	flag.StringVar(&cfg.Capitalization, "capitalization", "", "Capitalization to use for dashed IPv6 address in Plex custom access URL (upper|lower)")
