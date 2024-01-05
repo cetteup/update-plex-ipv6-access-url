@@ -10,13 +10,6 @@ import (
 	"github.com/cetteup/update-plex-ipv6-access-url/internal/plex"
 )
 
-type IPv6URLCapitalization string
-
-const (
-	IPv6URLCapitalizationLower IPv6URLCapitalization = "lower"
-	IPv6URLCapitalizationUpper IPv6URLCapitalization = "upper"
-)
-
 type ApiClient interface {
 	GetIdentity() (plex.IdentityDTO, error)
 	GetResources() (plex.ResourcesDTO, error)

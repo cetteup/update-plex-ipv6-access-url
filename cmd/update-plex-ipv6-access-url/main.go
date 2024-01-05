@@ -72,7 +72,7 @@ func main() {
 	remoteClient := plex.NewApiClient(plex.BaseURL, cfg.Token, cfg.Timeout)
 	h := handler.NewHandler(localClient, remoteClient)
 
-	selectedAddrs, err := h.SelectAddrs(interfaceAddrs, handler.AddrPreference(cfg.AddrPreference))
+	selectedAddrs, err := h.SelectAddrs(interfaceAddrs, cfg.AddrPreference)
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -86,7 +86,7 @@ func main() {
 			Msg("Selected IPv6 addresses")
 	}
 
-	err = h.UpdateIPv6CustomAccessURLs(selectedAddrs, handler.IPv6URLCapitalization(cfg.Capitalization))
+	err = h.UpdateIPv6CustomAccessURLs(selectedAddrs, cfg.Capitalization)
 	if err != nil {
 		log.Fatal().
 			Err(err).

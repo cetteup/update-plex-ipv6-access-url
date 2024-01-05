@@ -23,7 +23,7 @@ type Config struct {
 	AddrPreference handler.AddrPreference
 	ConfigPath     string
 	Token          string
-	Capitalization string
+	Capitalization handler.IPv6URLCapitalization
 	Timeout        int
 }
 
@@ -38,7 +38,7 @@ func Init() *Config {
 	flag.TextVar(&cfg.AddrPreference, "use", handler.AddrPreferenceFirst, "Which IPv6 address(es) to use if multiple are found on the interface (first|last|all)")
 	flag.StringVar(&cfg.ConfigPath, "config", "", "Path to Plex config (Preferences.xml)")
 	flag.StringVar(&cfg.Token, "token", "", "Plex access token (X-Plex-Token) [required if 'config' flag is/cannot be provided]")
-	flag.StringVar(&cfg.Capitalization, "capitalization", "", "Capitalization to use for dashed IPv6 address in Plex custom access URL (upper|lower)")
+	flag.TextVar(&cfg.Capitalization, "capitalization", handler.IPv6URLCapitalizationLower, "Capitalization to use for dashed IPv6 address in Plex custom access URL (upper|lower)")
 	flag.IntVar(&cfg.Timeout, "timeout", 5, "Plex API request timeout (in seconds)")
 	flag.Parse()
 	return cfg
