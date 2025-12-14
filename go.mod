@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/rs/zerolog v1.34.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
