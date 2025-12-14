@@ -15,15 +15,17 @@ jobs:
     name: lint
     strategy:
       matrix:
+        go-version-file: [ go.mod, .tool-versions ]
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+          go-version-file: ${{ matrix.go-version-file }}
+
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           only-new-issues: true
@@ -33,13 +35,16 @@ jobs:
     name: unit-test
     strategy:
       matrix:
+        go-version-file: [ go.mod, .tool-versions ]
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ matrix.go-version-file }}
+
       - uses: actions/cache@v5
         with:
           # In order:
@@ -55,4 +60,6 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
-      - run: go test ./... --tags unit
+
+      - name: test
+        run: go test ./... --tags unit
