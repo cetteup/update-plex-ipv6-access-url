@@ -11,8 +11,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  golangci:
-    name: lint
+  lint:
     strategy:
       matrix:
         go-version-file: [ go.mod, .tool-versions ]
@@ -32,7 +31,6 @@ jobs:
           args: --timeout=3m
 
   unit-test:
-    name: unit-test
     strategy:
       matrix:
         go-version-file: [ go.mod, .tool-versions ]
